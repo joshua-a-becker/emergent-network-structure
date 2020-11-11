@@ -1,6 +1,6 @@
 rm(list=ls());gc()
-require(tidyverse)
-require(DescTools)
+library(tidyverse, warn.conflicts = F, quietly = T)
+library(DescTools, warn.conflicts = F, quietly = T)
 source("00a_data_prep_REANALYSIS.R")
 source("00b_data_prep_REPLICATION.R")
 

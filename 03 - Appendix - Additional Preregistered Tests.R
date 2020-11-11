@@ -21,15 +21,22 @@ myd %>%
   summarize(
       prop.improve=mean(improve=="improve")
     , p.val = prop.test(table(improve=="improve"))$p.val
-    #, est = prop.test(table(improve=="improve"))$estimate
+    , xsq = prop.test(table(improve=="improve"))$statistic
+    , est = prop.test(table(improve=="improve"))$estimate
   )
 
 
-### ARE THE TWO COMMUNICATION FORMATS DIFFERENT?
-### WHEN MAJORITY IS AWAY?
+### ARE THE TWO COMMUNICATION FORMATS DIFFERENT
+### WHEN MAJORITY IS TOWARD/AWAY?
 myd %>% 
+  subset(prop_toward!=0.5) %>%
   group_by(replication, maj) %>%
   summarize(
-    p.val=prop.test(table(improve, communication))$p.val
+    p.val=prop.test(table(communication, improve))$p.val
+    , xsq = prop.test(table(communication, improve))$statistic
+#    , est1 = prop.test(table(communication, improve))$estimate[1]
+#    , est2 = prop.test(table(communication, improve))$estimate[2]
+    , delph = mean(improve[communication=="Delphi"]=="improve")
+    , disc = mean(improve[communication=="Discussion"]=="improve")
   )
-s
+  

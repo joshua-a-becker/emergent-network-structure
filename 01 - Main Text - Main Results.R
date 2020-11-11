@@ -3,6 +3,7 @@ if(!exists("data_loaded")){
 }
 library(magrittr)
 library(miceadds)
+library(texreg)
 
 my.prop.test = function(tb, margin=NULL) {
   p.tb=prop.table(tb, margin=margin)
@@ -38,20 +39,20 @@ myd %>%
 ### Does phi predict outcomes?
 
 # For replication (as pre-registered)
-aggreg %>%
+mod.rep.disc = aggreg %>%
   subset(dataset=="replication") %>%
   subset(communication=="Discussion") %>%
-  glm(improve ~ task + prop_toward, family="binomial", data=.) %>%
-  summary
+  glm(improve ~ task + prop_toward, family="binomial", data=.)
 
-aggreg %>%
+
+mod.rep.delph = aggreg %>%
   subset(dataset=="replication") %>%
   subset(communication=="Delphi") %>%
-  glm(improve ~ task + prop_toward, family="binomial", data=.) %>%
-  summary
+  glm(improve ~ task + prop_toward, family="binomial", data=.)
+
 
 # For reanalysis (as pre-registered)
-aggreg %>%
+mod.rean.disc=aggreg %>%
   subset(dataset!="replication") %>%
   subset(communication=="Discussion") %>%
   miceadds::glm.cluster(
@@ -59,9 +60,9 @@ aggreg %>%
     , data=.
     , cluster=(.)$trial
     , family="binomial" 
-  ) %>% summary
+  )
 
-aggreg %>%
+mod.rean.delph=aggreg %>%
   subset(dataset!="replication") %>%
   subset(communication=="Delphi")  %>%
   miceadds::glm.cluster(
@@ -69,7 +70,21 @@ aggreg %>%
     , data=.
     , cluster=paste0((.)$trial, (.)$dataset)
     , family="binomial" 
-  ) %>% summary
+  )
+
+
+
+
+
+htmlreg(list(mod.rep.disc, mod.rep.delph, mod.rean.disc, mod.rean.delph)
+        , file="Figures/Table A2.html"
+        , custom.header=list("Replication"=1:2,"Reanalysis"=3:4)
+        ,custom.model.names=c("Disc.","Delphi","Disc.","Delphi")
+        , custom.coef.map=list("prop_toward"="&Phi;")
+        , caption="Outcome:  Mean Closer to Truth (Yes/No)"
+        , caption.above=T
+        , stars=c(0.02,0.01,0.001)
+)
 
 
 ### VISUALIZE
@@ -100,9 +115,10 @@ ggsave("Figures/Main Hypothesis.png", width=4, height=2)
 myd %>% 
   mutate(maj = ifelse(prop_toward<0.5,"Away","Toward")) %>%
   group_by(replication, communication) %>%
-  subset(prop_toward!=0.5) %>%
+  #subset(prop_toward!=0.5) %>%
   summarize(
     p.val = prop.test(table(maj, improve))$p.val
+    , est = prop.test(table(maj, improve))$estimate[1]
   )
 
 
@@ -112,31 +128,45 @@ myd %>%
 ### pre-registered version.... doesn't include zeros
 ### b/c gini was calulated only on people *present* in the conversation
 ### omitting lurkers with opinions, but zero contributions
-myd %>%
+cent.rean.orig = myd %>%
   subset(replication=="reanalysis") %>%
-  glm(improve=="improve" ~ gini_talkativeness_present_only*prop_toward + task, family="binomial", data=.) %>%
-  summary
+  glm(improve=="improve" ~ gini_talkativeness_present_only*prop_toward + task, family="binomial", data=.)
 
-
-myd %>%
+cent.rep.orig = myd %>%
   subset(replication=="replication") %>%
-  glm(improve=="improve" ~ gini_talkativeness_present_only*prop_toward + task, family="binomial", data=.) %>%
-  summary
+  glm(improve=="improve" ~ gini_talkativeness_present_only*prop_toward + task, family="binomial", data=.)
 
 ### revised version? does include zeros
-myd %>%
+cent.rean.rev = myd %>%
   subset(replication=="reanalysis") %>%
   glm(improve=="improve" ~ gini_talkativeness*prop_toward + task, family="binomial"
-      , data=.) %>%
-  summary
+      , data=.)
 
-myd %>%
+cent.rep.rev = myd %>%
   subset(replication=="replication") %>%
   glm(improve=="improve" ~ gini_talkativeness*prop_toward + task, family="binomial"
-      , data=.) %>%
-  summary
+      , data=.)
 
 
+
+
+
+htmlreg(list(cent.rean.orig, cent.rep.orig, cent.rean.rev, cent.rep.rev)
+        , file="Figures/Table A3.html"
+        , custom.header=list("PreReg."=1:2,"Revised"=3:4)
+        ,custom.model.names=c("Rean.","Rep.","Rean.","Rep.")
+        , custom.coef.map=list(
+            "prop_toward" = "&Phi;"
+          , "gini_talkativeness_present_only" = "Gini"
+          , "gini_talkativeness" = "Gini"
+          , "gini_talkativeness_present_only:prop_toward"="Gini * &Phi;"
+          , "gini_talkativeness:prop_toward" = "Gini * &Phi;"
+          
+          
+        )
+        , caption="Outcome:  Mean Closer to Truth (Yes/No)"
+        , caption.above=T
+)
 
 
 

@@ -1,6 +1,6 @@
-require(tidyverse)
-require(readxl)
-require(httr)
+library(tidyverse,warn.conflicts = F, quietly = T)
+library(readxl,warn.conflicts = F, quietly = T)
+library(httr,warn.conflicts = F, quietly = T)
 
 ### DOWNLOAD DELPHI DATA
 

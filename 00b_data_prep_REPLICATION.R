@@ -1,4 +1,4 @@
-require(tidyverse)
+library(tidyverse, warn.conflicts = F, quietly = T)
 
 delphi_replication = read.csv("Replication Data/delphi_data.csv", stringsAsFactors=F) %>%
   mutate(
