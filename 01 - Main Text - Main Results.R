@@ -24,7 +24,7 @@ myd %>%
   group_by(replication, communication) %>%
   summarize(
       improve = mean(change_err_mu<0)
-    , p.val = prop.test(table(change_err_mu<0))$p.val
+    , p.val = binom.test(table(change_err_mu<0))$p.val
     , est = prop.test(table(change_err_mu<0))$estimate
     
   )
