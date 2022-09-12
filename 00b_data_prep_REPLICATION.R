@@ -7,7 +7,7 @@ delphi_replication = read.csv("Replication Data/delphi_data.csv", stringsAsFacto
     , post_influence=response_5
     , communication="Delphi"
     , count_chat = NA
-    , count_words = NA
+    , count_length = NA
     , analysis="replication"
     , dataset="replication"
   ) %>%
@@ -18,12 +18,13 @@ delphi_replication = read.csv("Replication Data/delphi_data.csv", stringsAsFacto
 
 
 ### get count chat for discussion data
+Sys.setlocale("LC_ALL", "C") # fix a character encoding issue
 chat_data_replication = read.csv("Replication Data/chat_data.csv", stringsAsFactors=F) %>%
   group_by(trial, playerId) %>%
   summarize(
       count_chat = sum(!is.na(text))
-    , count_words = sum(nchar(text))
-    , count_words = ifelse(is.na(count_words), 0, count_words)
+    , count_length = sum(nchar(text))
+    , count_length = ifelse(is.na(count_length), 0, count_length)
   )
 
 

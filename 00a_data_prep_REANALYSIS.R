@@ -1,14 +1,39 @@
+
+###
+###
+### FIRST YOU MUST DOWNLOAD DATA 
+### FOR TWO PAPERS:
+### 
+###   Lorenz et al 2011:
+###   https://www.pnas.org/doi/suppl/10.1073/pnas.1008636108/suppl_file/sd01.xls
+###
+###   Becker et al 2017:
+###   https://www.pnas.org/doi/suppl/10.1073/pnas.1615978114/suppl_file/pnas.1615978114.sd01.csv
+###
+###
+###   Save these files into:
+###     emergent-network-structure\Reanalysis Data
+###
+###
+
+
 library(tidyverse,warn.conflicts = F, quietly = T)
 library(readxl,warn.conflicts = F, quietly = T)
 library(httr,warn.conflicts = F, quietly = T)
 
-### DOWNLOAD DELPHI DATA
 
-lorenz_url = "http://www.pnas.org/highwire/filestream/606236/field_highwire_adjunct_files/1/sd01.xls"
-if(!file.exists("Reanalysis Data/lorenz_et_al.xls")) {
-  GET(lorenz_url, write_disk(tf <- "Reanalysis Data/lorenz_et_al.xls", overwrite=T))  
+if(!file.exists("Reanalysis Data/sd01.xls")) {
+  stop('\n\n\n
+   ***MISSING DATA***
+
+See "00a_data_prep_REANALYSIS.R" -- you must manually download 2 datasets.
+
+   ******************
+       
+       ')
 }
-lorenz2011 <- read_excel("Reanalysis Data/lorenz_et_al.xls") %>%
+
+lorenz2011 <- read_excel("Reanalysis Data/sd01.xls") %>%
   mutate(
       pre_influence = E1
     , post_influence = E5
@@ -26,8 +51,18 @@ lorenz2011 <- read_excel("Reanalysis Data/lorenz_et_al.xls") %>%
   )
 
 
-if(!file.exists("Reanalysis Data/becker2017.csv.download")){
-  becker2017 = read.csv(url("http://www.pnas.org/highwire/filestream/30360/field_highwire_adjunct_files/1/pnas.1615978114.sd01.csv")
+
+if(!file.exists("Reanalysis Data/pnas.1615978114.sd01.csv")){
+  stop('\n\n\n
+   ***MISSING DATA***
+
+See "00a_data_prep_REANALYSIS.R" -- you must manually download 2 datasets.
+
+   ******************
+       
+       ')
+} else {
+  becker2017 = read.csv("Reanalysis Data/pnas.1615978114.sd01.csv"
                         , stringsAsFactors=F) %>%
     mutate(
       trial=group_number
@@ -41,10 +76,6 @@ if(!file.exists("Reanalysis Data/becker2017.csv.download")){
     mutate(
       soc_info = mean.neighbor.time1
     )
-  
-  write.csv(becker2017, "Reanalysis Data/becker2017.csv.download")
-} else {
-  becker2017 = read.csv("Reanalysis Data/becker2017.csv.download", stringsAsFactors=F)
 }
   
 
@@ -112,7 +143,7 @@ chat_sum_individ = chats %>%
   group_by(subject.no, question) %>%
   summarize(
       count_chat = length(Rs)
-    , count_words = sum(nchar(Rs))
+    , count_length = sum(nchar(Rs))
   ) %>%
   rowwise %>%
   subset(subject.no %in% gurc_d$subject.no) %>%
@@ -133,7 +164,7 @@ delphi_reanalysis = rbind(
   mutate(
       analysis = "reanalysis"
       , count_chat=NA
-      , count_words=NA
+      , count_length=NA
   )
 
 
@@ -156,9 +187,9 @@ disc_reanalysis = gurc_d %>%
   mutate(
       analysis="reanalysis"
       , count_chat = ifelse(is.na(count_chat), 0, count_chat)
-      , count_words = ifelse(is.na(count_chat), 0, count_words)
+      , count_length = ifelse(is.na(count_chat), 0, count_length)
       
       ### ensure that actual missing data is encoded as NA
       , count_chat = ifelse(!group %in% chat_sum_individ$group_number, NA, count_chat)
-      , count_words = ifelse(!group %in% chat_sum_individ$group_number, NA, count_words)
+      , count_length = ifelse(!group %in% chat_sum_individ$group_number, NA, count_length)
   )

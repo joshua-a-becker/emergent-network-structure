@@ -1,3 +1,20 @@
+###
+###
+### FIRST YOU MUST DOWNLOAD DATA 
+### FOR TWO PAPERS:
+### 
+###   Lorenz et al 2011:
+###   https://www.pnas.org/doi/suppl/10.1073/pnas.1008636108/suppl_file/sd01.xls
+###
+###   Becker et al 2017:
+###   https://www.pnas.org/doi/suppl/10.1073/pnas.1615978114/suppl_file/pnas.1615978114.sd01.csv
+###
+###
+###   Save these files into:
+###     emergent-network-structure\Reanalysis Data
+###
+###
+
 rm(list=ls());gc()
 library(tidyverse, warn.conflicts = F, quietly = T)
 library(DescTools, warn.conflicts = F, quietly = T)
@@ -27,7 +44,7 @@ propToward = function(x, truth) {
 
 
 cols=c("pre_influence","post_influence","truth","task","trial"
-       ,"communication","count_chat","count_words","analysis","dataset"
+       ,"communication","count_chat","count_length","analysis","dataset"
        , "soc_info")
 
 d = rbind(
@@ -59,14 +76,14 @@ chat_stats = d %>%
   group_by(task, trial, communication, analysis, dataset) %>%
   ## get chat stats including ALL people participating in chat
   summarize(
-      gini_talkativeness = Gini(count_chat)
-    , gini_talkativeness_present_only = Gini(count_chat[count_chat>0])
-    , gini_words = Gini(count_words)
+    #  gini_talkativeness = Gini(count_chat)
+    #, gini_talkativeness_present_only = Gini(count_chat[count_chat>0])
+    #, gini_length = Gini(count_length)
     , mean_talkativeness = mean(count_chat)
-    , mean_words = mean(count_words)
-    , total_talkativeness=sum(count_chat)
-    , total_words = sum(count_words)
-    , count_in_convo = sum(count_words!=0)
+    #, mean_length = mean(count_length)
+    #, total_talkativeness=sum(count_chat)
+    #, total_length = sum(count_length)
+    #, count_in_convo = sum(count_length!=0)
   )
 
 d_valid = d %>%
@@ -108,25 +125,29 @@ aggreg =  d_valid %>%
     , omega_hat_03 = calcOmegaHat(pre_influence, N, w=0.3, truth)
 
     
+    , var = var(pre_influence)
+    , ind_err = mean((pre_influence-truth)^2)
+    
+    
     ## centralization
-    , gini_alpha = Gini(stubborn_cent)
-    , gini_alpha = ifelse(is.na(gini_alpha), 0, gini_alpha)
+    #, gini_alpha = Gini(stubborn_cent)
+    #, gini_alpha = ifelse(is.na(gini_alpha), 0, gini_alpha)
     
     ## other alpha
-    , alpha_cor = cor.test(stubborn_cent[is.finite(stubborn_cent)], err[is.finite(stubborn_cent)], na.rm=T)$estimate
-    , move_cor = cor.test(err, (pre_influence==post_influence)*1)$estimate
+    #, alpha_cor = cor.test(stubborn_cent[is.finite(stubborn_cent)], err[is.finite(stubborn_cent)], na.rm=T)$estimate
+    #, move_cor = cor.test(err, (pre_influence==post_influence)*1)$estimate
     
-    , talk_cor = tryCatch(cor.test(err, count_chat)$estimate,error=function(e){NA})
+    #, talk_cor = tryCatch(cor.test(err, count_chat)$estimate,error=function(e){NA})
     
-    , gini_talkativeness = Gini(count_chat)
-    , gini_talkativeness_present_only = Gini(count_chat[count_chat>0])
-    , gini_words = Gini(count_words)
-    , mean_talkativeness = mean(count_chat)
-    , mean_talkativeness_present_only = mean(count_chat[count_chat>0])
-    , mean_words = mean(count_words)
-    , total_talkativeness=sum(count_chat)
-    , total_words = sum(count_words)
-    , count_in_convo = sum(count_words!=0)
+    #, gini_talkativeness = Gini(count_chat)
+    #, gini_talkativeness_present_only = Gini(count_chat[count_chat>0])
+    #, gini_length = Gini(count_length)
+    #, mean_talkativeness = mean(count_chat)
+    #, mean_talkativeness_present_only = mean(count_chat[count_chat>0])
+    #, mean_length = mean(count_length)
+    #, total_talkativeness=sum(count_chat)
+    #, total_length = sum(count_length)
+    #, count_in_convo = sum(count_length!=0)
     
     ### extra stuff
     , sd = sd(pre_influence)
@@ -136,8 +157,9 @@ aggreg =  d_valid %>%
     ### is the most talkative person toward truth?
     #, central_twd_truth = ifelse(sum(!is.na(count_chat))==0, NA, toward_truth[which.max(count_chat)]=="Toward")
     , central_twd_truth = ifelse(sum(!is.na(count_chat))==0, NA, toward_truth[!is.na(toward_truth)][which.max(count_chat[!is.na(toward_truth)])]=="Toward")
-    , central_pre_influence = ifelse(sum(!is.na(count_chat))==0, NA, pre_influence[which.max(count_chat)])
-    , central_diff_from_mu =  (central_pre_influence-mu1)/sd
+    , central_twd_truth_length = ifelse(sum(!is.na(count_length))==0, NA, toward_truth[!is.na(toward_truth)][which.max(count_length[!is.na(toward_truth)])]=="Toward")
+    #, central_pre_influence = ifelse(sum(!is.na(count_chat))==0, NA, pre_influence[which.max(count_chat)])
+    #, central_diff_from_mu =  (central_pre_influence-mu1)/sd
   ) %>%
   mutate(
      prop_toward_round=round(prop_toward,1)
